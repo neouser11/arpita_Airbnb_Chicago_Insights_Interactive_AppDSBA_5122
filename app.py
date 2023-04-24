@@ -22,7 +22,7 @@ def get_data():
 st.title('Airbnb Chicago')
 page = st_btn_select(
   # The different pages
-  ('Interesting Trends','Insights','Top Hosts Listings','Sentiment Analyis of Reviews','Reliable and Secure Stay'),
+  ('Interesting Trends','Insights','Top Hosts Listings','Sentiment Analyis of Reviews'),
   # Enable navbar
   nav=False
 )
@@ -112,7 +112,7 @@ if page=="Top Hosts Listings":
   color_list = ['#0f7216', '#b2790c', '#ffe9a3',
               '#f9d4d4', '#d35158', '#ea3033']
   squarify.plot(sizes=sizes, label=labels,
-              color=color_list, alpha=0.7).set(title='Treemap with Squarify')
+              color=color_list, alpha=0.7).set(title='Treemap of Top Hosts')
   plt.axis('off')
   st.pyplot()
 
