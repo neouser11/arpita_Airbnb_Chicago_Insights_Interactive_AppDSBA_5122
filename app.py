@@ -282,7 +282,7 @@ if page=="Sentiment Analyis of Reviews":
   
   @st.cache_data
   def get_data1():
-      df_sa = pd.read_csv("data/reviewsmarch22.csv", encoding='latin-1')
+      df_sa = pd.read_csv("data/reviews22.csv", encoding='latin-1')
       return df_sa
 
   #df = pd.read_csv("data/reviewsmarch22.csv")
