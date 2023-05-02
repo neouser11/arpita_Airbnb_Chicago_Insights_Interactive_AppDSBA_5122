@@ -11,19 +11,19 @@ import matplotlib.pyplot as plt
 import folium
 from streamlit_folium import st_folium
 #Sentiment Analysis Packages using Text Blob and Vader
-import nltk
+#import nltk
 #nltk.download('stopwords')
 #nltk.download('punkt')
-import re
-import seaborn as sns
-from matplotlib import style            
-from textblob import TextBlob
-from nltk.tokenize import word_tokenize
-from nltk.stem import PorterStemmer
-from nltk.corpus import stopwords
-stop_words = set(stopwords.words('english'))
-from wordcloud import WordCloud
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
+# import re
+# import seaborn as sns
+# from matplotlib import style            
+# from textblob import TextBlob
+# from nltk.tokenize import word_tokenize
+# from nltk.stem import PorterStemmer
+# from nltk.corpus import stopwords
+# stop_words = set(stopwords.words('english'))
+# from wordcloud import WordCloud
+# from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -37,7 +37,7 @@ def get_data():
 st.title('Airbnb Chicago Insights')
 page = st_btn_select(
   # The different pages
-  ('Interesting Trends','Listings By Top Hosts','Insights','Sentiment Analyis of Reviews'),
+  ('Interesting Trends','Listings By Top Hosts','Insights'),
   # Enable navbar
   nav=False
 )
@@ -45,7 +45,7 @@ page = st_btn_select(
 df = get_data()
 ##################  PAGE=Interesting Trends #################################################################################
 if page=='Interesting Trends':
-  st.markdown("Settled along the banks of Lake Michigan, the Windy City of Chicago offers world-class dining, exciting architecture, a top performing arts scene, and plenty of excellent museums. With more than 200 neighborhoods calling this city home, there’s a unique aura found in each.Let us get an idea  which neighbourhoods have the highest and lowest average Price.")
+  st.markdown("Settled along the banks of Lake Michigan, the Windy City of Chicago offers world-class dining, exciting architecture, a top performing arts scene, and plenty of excellent museums. With more than 200 neighborhoods calling this city home, there’s a unique aura found in each.Let us get an idea  which neighbourhoods have the **:red[highest]** and the **:blue[lowest]** average Price.")
   df1=df.groupby(['neighbourhood_cleansed'],as_index=False).agg(AveragePrice=('price',np.mean)).sort_values('AveragePrice', ascending=False, ignore_index= True)
   df2= df1.head(5)#st.table(pricedf)
   df3=df.groupby(['neighbourhood_cleansed'],as_index=False).agg(AveragePrice=('price',np.mean)).sort_values('AveragePrice', ignore_index= True)
@@ -54,7 +54,7 @@ if page=='Interesting Trends':
   df5 =  pd.concat([df2, df4], ignore_index= True)
   top5bar = alt.Chart(df5,title="Top 5 and Bottom 5 neighbourhoods by Average Price").mark_bar().encode(
     y= alt.Y('neighbourhood_cleansed:N', title='Neighbourhood', sort = '-x' ),      
-    x=alt.X('AveragePrice:Q', title='Average Price'),
+    x=alt.X('AveragePrice:Q', title='Average Price ($)'),
     color=alt.condition(alt.expr.datum['AveragePrice'] > df5["AveragePrice"].mean(),
                             alt.value('red'),
                             alt.value('blue'))
@@ -74,32 +74,47 @@ if page=='Interesting Trends':
  
  ###################################Insights Page######################################################
 if page == 'Insights':
-  with st.expander('Interesting Insights on Airbnb Chicago'):
-    st.write('This app lets the user visualize interesting insights in the Chicago Airbnb Market using Neighbourhood and Review score rating filters')
-
-
+  # with st.expander('Interesting Insights on Airbnb Chicago'):
+  #   st.write('This app lets the user visualize interesting insights in the Chicago Airbnb Market using Neighbourhood and Review score rating filters')
+  rating_var = st.sidebar.slider("Review Scores Rating", float(df.review_scores_rating.min()), float(df.review_scores_rating.max()),(4.5, 5.0))
   neighbourhood = st.sidebar.selectbox('Choose a neighbourhood',df['neighbourhood_cleansed'].unique())
 
-  rating_var = st.sidebar.slider("Review Scores Rating", float(df.review_scores_rating.min()), float(df.review_scores_rating.max()),(4.5, 5.0))
+  
 
-  #################
+  #################MORE REVIEWS AND MORE LISTINGS###########################################
 
   st.markdown("Use the Slider for Review Score Rating to find the Neighbourhoods that has the **Maximum supply of Listings** and more **customer Reviews**")
     
   top = df.query(f"""review_scores_rating.between{rating_var}""")
   groupedDF = top.groupby( "neighbourhood_cleansed", as_index=False ).agg(Average_Number_of_Reviews=('number_of_reviews', \
-                                                                    np.mean),CountOfListings=('id', np.size))  
-  groupedDF = groupedDF.head(10)
-  #st.table(groupedDF)
-  test = alt.Chart(groupedDF,title=f"Neighbourhoods with Maximum Count of Listings and Customer Reviews between Review score Rating Range:{rating_var}").\
+                                                                    np.mean),CountOfListings=('id', np.size))\
+                                                                    .sort_values('Average_Number_of_Reviews',ascending=False,ignore_index=True)
+  #groupedDF.sort_values('Average_Number_of_Reviews',ascending=False,ignore_index=True)#.sort_values('CountOfListings',ascending=False,ignore_index=True)
+  groupedDF = groupedDF.head(5)
+
+  groupedDF1 = top.groupby( "neighbourhood_cleansed", as_index=False ).agg(Average_Number_of_Reviews=('number_of_reviews', \
+                                                                    np.mean),CountOfListings=('id', np.size))\
+                                                                    .sort_values('CountOfListings',ascending=False,ignore_index=True)
+  groupedDF1 = groupedDF1.head(5)#st.table(groupedDF)
+  dfconcat =  pd.concat([groupedDF, groupedDF1], ignore_index= True)
+  
+  test = alt.Chart(dfconcat,title=f"Neighbourhoods with Maximum Count of Listings and Customer Reviews between Review score Rating Range:{rating_var}").\
   mark_point().encode(
     x='Average_Number_of_Reviews',
     y='CountOfListings',    
     color=alt.Color('neighbourhood_cleansed',title="Neighbourhood")
   ).interactive()
-  st.altair_chart(test, use_container_width=True)
 
-###########################
+  text = test.mark_text(
+    align='left',
+    baseline='middle'
+    #dx=7
+).encode(
+    text='neighbourhood_cleansed'
+)
+  st.altair_chart(test+text, use_container_width=True)
+
+###########################How many listings are licenced in each room type#################################
 
   def getLicenseType(row_value):
     if pd.isnull(row_value) != True  and str(row_value) !='' :
@@ -118,7 +133,7 @@ if page == 'Insights':
       else:
         return 'Non-SuperHost'
 
-  st.markdown("Select Neighbourhood and SuperHost Filter on the sidebar to find the number of licensed or Unlicensed listings belonging to each Room Type and posted by Superhosts.")
+  st.markdown("Select Neighbourhood and SuperHost Filter to find the number of licensed or Unlicensed listings belonging to each Room Type.")
     #dfPrice=df.query(f"""neighbourhood_cleansed==@neighbourhood""")
   df["HostIsSuperhost"] =  df['host_is_superhost'].apply(superhost)
  
@@ -128,7 +143,7 @@ if page == 'Insights':
   dflicense["License Type"] =  df['license'].apply(getLicenseType)
   licensedf=dflicense.groupby(['room_type','License Type' ],as_index=False).agg(CountOfListings=('id', np.size))
   #licensedf
-  fig = px.bar(licensedf, title=f"Listings belonging to Room Type and License Type in **{neighbourhood}**",
+  fig = px.bar(licensedf, title=f"Analysis of Listings by License Type under each Room Type  in **{neighbourhood}**",
               x="room_type",
               y="CountOfListings",
       
@@ -146,7 +161,7 @@ if page == 'Insights':
       else:
         return 'Not Verified'
       
-  st.markdown("Choose Properties from the Most Trustworthy and Proactive Hosts to have a Secure stay.")
+  st.markdown("Let us analyze the number of Properties from the Most Trustworthy and Proactive Hosts in your preferred neighbourhood and Room Type.")
   roomtype = st.selectbox('Choose your preferred Room Type',df['room_type'].unique())
   dfsecure=df.query(f"""neighbourhood_cleansed==@neighbourhood and room_type==@roomtype""")
   dfsecure["Host Identity Verified"] =  dfsecure['host_identity_verified'].apply(getidentity_ver)
@@ -168,8 +183,9 @@ if page == 'Insights':
   st.plotly_chart(fig, use_container_width= True )
 
 ###############################
-  st.markdown("Select Neighbourhood ,Room type to find the Average price for Properties listed by Superhosts and Non-SuperHosts")
-  roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
+  st.markdown("Select Neighbourhood to analyze the differences in Price ($) for Properties listed by Superhosts and Non-SuperHosts.")
+  st.markdown("Are Superhosts charging more compared to Non-Superhosts?")
+  #roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
   price=df.query(f"""neighbourhood_cleansed==@neighbourhood #and room_type==@roomtype""")
 
   def superhost(row_value):
@@ -183,17 +199,17 @@ if page == 'Insights':
   # superdf=price.groupby(['room_type','HostIsSuperhost'],as_index=False).agg(AveragePrice=('price',np.mean)).\
   #                        sort_values('AveragePrice', ascending=False, ignore_index= True)
   #st.table(pricedf)
-  fig = px.box(
-    data_frame = superdf
-    ,y = 'AveragePrice'
-    ,x = 'room_type'
-    ,color = 'Host Is Superhost'
-    ,color_discrete_map={"SuperHost":"blue", "Non-SuperHost":"red"}
-    ,category_orders={"Host Is Superhost":("SuperHost", "Non-SuperHost")}
-  )
-  st.plotly_chart(fig, use_container_width= True )
+  # fig = px.box(
+  #   data_frame = superdf
+  #   ,y = 'AveragePrice'
+  #   ,x = 'room_type'
+  #   ,color = 'Host Is Superhost'
+  #   ,color_discrete_map={"SuperHost":"blue", "Non-SuperHost":"red"}
+  #   ,category_orders={"Host Is Superhost":("SuperHost", "Non-SuperHost")}
+  # )
+  # st.plotly_chart(fig, use_container_width= True )
 
-  fig2 = px.bar(superdf, title=f"Average Price of Properties listed by Superhosts and Non-SuperHosts in {neighbourhood}",\
+  fig2 = px.bar(superdf, title=f"Average Price of Properties listed by Superhosts vs Non-SuperHosts in *{neighbourhood}*",\
              x="room_type",
               y="AveragePrice",      
               color="Host Is Superhost", 
@@ -216,22 +232,26 @@ if page == 'Insights':
 
 
   ############"#####
-  st.markdown("Select Neighbourhood Filter to find the **Top Rated Hosts** in the area")
+  # st.markdown("Select Neighbourhood Filter to find the **Top Rated Hosts** in the area")
 
-  top = df.query(f"""neighbourhood_cleansed==@neighbourhood""")
-  topdf=top.groupby(['host_name'],as_index=False).agg(NumberOfReviews=('number_of_reviews',np.size))\
-      .sort_values('NumberOfReviews',ascending=False,ignore_index=True)
-  topdf= topdf.head(5)
-  bars = alt.Chart(topdf,title=f"Top Rated Hosts in **{neighbourhood}**").mark_bar().encode(
-        x= alt.Y('NumberOfReviews:Q', title='Number Of Reviews'),      
-        y=alt.Y('host_name:N', title='Host',sort = '-x')
-        )
-  st.altair_chart(bars, use_container_width=True)
+  # top = df.query(f"""neighbourhood_cleansed==@neighbourhood""")
+  # topdf=top.groupby(['host_name'],as_index=False).agg(NumberOfReviews=('number_of_reviews',np.size))\
+  #     .sort_values('NumberOfReviews',ascending=False,ignore_index=True)
+  # topdf= topdf.head(5)
+  # bars = alt.Chart(topdf,title=f"Top Rated Hosts in **{neighbourhood}**").mark_bar().encode(
+  #       x= alt.Y('NumberOfReviews:Q', title='Number Of Reviews'),      
+  #       y=alt.Y('host_name:N', title='Host',sort = '-x')
+  #       )
+  # st.altair_chart(bars, use_container_width=True)
 
 
 
-###############################PAGE3######################################################################
+###############################PAGE3 LISTINGS BY TOP HOSTS######################################################################
 if page=="Listings By Top Hosts":
+  st.markdown("This page will help us to get details of the listings by Top Hosts within the selected Price Range and in the neighbourhood of your choice") 
+  #st.text("Select Neighbourhood and Price Range to filter the top hosts in the area based on the number of properties listed.")
+              
+            
   neighbourhood = st.sidebar.selectbox('Choose Neighbourhood',df['neighbourhood_cleansed'].unique())
   price1 = st.sidebar.slider("Price Range($)", float(df.price.min()), float(df.price.clip(upper=10000.).max()),\
                      (100., 300.))
@@ -243,13 +263,15 @@ if page=="Listings By Top Hosts":
       .sort_values('No_of_Listings',ascending=False,ignore_index=True)
   tdf3=tdf2.head(10)
 
-  fig = px.treemap(tdf3, path=['host_name'], values='No_of_Listings',
+  fig = px.treemap(tdf3,title=f"Top hosts in {neighbourhood} based on Number of listings.", path=['host_name'], values='No_of_Listings',
                   color='host_name', hover_data=['host_name'],
                   color_continuous_scale='RdBu'
                   )
   st.plotly_chart(fig, use_container_width= True )
   
-  st.markdown("Use the dropdown to select one of the top hosts and get more details of their listings and a link to the actual listing in airbnb")
+  st.markdown("Use the dropdown to select one of the top 10 hosts and get details of their listings in the map.")
+  st.markdown("The map will display all the properties by that host and on click of a specific listing ,get a pop up details for\
+              Room type, Price, Number of Reviews and a :red[link] to the :red[original listing page] in airbnb.com")
   #Click your ideal choice to get all the details of the listings by the top hosts in the area along with a link to the actual listing in airbnb.
   #ophosts = st.selectbox("Choose one of the top hosts",tdf3['host_name'])
   hostname = st.selectbox('Choose Host',tdf3['host_name'].unique())
