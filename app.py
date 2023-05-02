@@ -274,12 +274,3 @@ if page=="Listings By Top Hosts":
 
   # Render the map in Streamlit
   st_data =  st_folium(m, width= 725)
-
-  ###########################SENTIMENT ANALYSIS #########################################################
-
-
-
-
-
-
-   
