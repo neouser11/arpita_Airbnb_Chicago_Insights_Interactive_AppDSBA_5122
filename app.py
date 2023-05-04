@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import folium
 from streamlit_folium import st_folium
 #Sentiment Analysis Packages using Text Blob and Vader
-#import nltk
+import nltk
 #nltk.download('stopwords')
 #nltk.download('punkt')
 # import re
@@ -37,7 +37,7 @@ def get_data():
 st.title('Airbnb Chicago Insights')
 page = st_btn_select(
   # The different pages
-  ('Interesting Trends','Listings By Top Hosts','Insights'),
+  ('Interesting Trends','Listing Details By Top Hosts','SuperHosts vs Non-SuperHosts','Other Important Insights'),
   # Enable navbar
   nav=False
 )
@@ -71,9 +71,99 @@ if page=='Interesting Trends':
               color = "room_type").update_layout(yaxis_title="Number Of Listings",legend_title="Property Type")
   
   st.plotly_chart(fig, use_container_width= True )
+######################################SUPERHOST VS NON SUPERHOST####################################################
+if page=='SuperHosts vs Non-SuperHosts':
+  #analysis=st.sidebar.selectbox('By Average Price',
+                          #['','Continent data'])
+  neighbourhood = st.sidebar.selectbox('Select neighbourhood',df['neighbourhood_cleansed'].unique())
+
+  st.markdown("Select Neighbourhood to analyze the **:red[Differences in Price ($)]** for Properties listed by Superhosts and Non-SuperHosts.")
+  st.markdown("Are Superhosts charging more compared to Non-Superhosts across different property types ?")
+  #roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
+  price=df.query(f"""neighbourhood_cleansed==@neighbourhood #and room_type==@roomtype""")
+
+  def superhost(row_value):
+      if "t" in str(row_value).lower():
+        return 'SuperHost'
+      else:
+        return 'Non-SuperHost'
+      
+  price["Host Is Superhost"] =  price['host_is_superhost'].apply(superhost)
+  superdf=price.groupby(['room_type','Host Is Superhost'],as_index=False).agg(AveragePrice=('price',np.mean))                  
  
- ###################################Insights Page######################################################
-if page == 'Insights':
+  fig2 = px.bar(superdf, title=f"Average Price of Properties listed by Superhosts vs Non-SuperHosts in *{neighbourhood}*",\
+             x="room_type",
+              y="AveragePrice",      
+              color="Host Is Superhost", 
+              color_discrete_map={"SuperHost":"blue", "Non-SuperHost":"red"}, 
+              #category_orders={"variable":["Revenue","Expenses"]}, 
+              barmode = 'group',
+              text="AveragePrice",        
+              hover_data=['AveragePrice']).update_traces(textposition='outside',cliponaxis=False, texttemplate='$%{y:.2f}').update_layout(
+    xaxis_title="Property Type", yaxis_title="Average Price ($)",xaxis_tickangle=-45)
+    #fig.update_traces(textfont_size=12, textangle=0, textposition="outside")
+  
+  st.plotly_chart(fig2, use_container_width= True)
+
+
+
+  st.markdown("Select Neighbourhood to analyze the differences in **:red[Number of listings]** by Superhosts and Non-SuperHosts.")
+  st.markdown("Does Superhosts lists more number of properties compared to Non-Superhosts?")
+  #roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
+  price=df.query(f"""neighbourhood_cleansed==@neighbourhood #and room_type==@roomtype""")
+
+  def superhost(row_value):
+      if "t" in str(row_value).lower():
+        return 'SuperHost'
+      else:
+        return 'Non-SuperHost'
+      
+  price["Host Is Superhost"] =  price['host_is_superhost'].apply(superhost)
+  superdf1=price.groupby(['room_type','Host Is Superhost'],as_index=False).agg(NumberOfListings=('id',np.size))                  
+ 
+  fig3 = px.bar(superdf1, title=f"Number of Properties Listed by Superhosts vs Non-SuperHosts in *{neighbourhood}*",\
+             x="room_type",
+              y="NumberOfListings",      
+              color="Host Is Superhost", 
+              color_discrete_map={"SuperHost":"blue", "Non-SuperHost":"red"}, 
+              #category_orders={"variable":["Revenue","Expenses"]}, 
+              barmode = 'group',
+              text="NumberOfListings",        
+              hover_data=['NumberOfListings']).update_traces(textposition='outside',cliponaxis=False).update_layout(
+    xaxis_title="Property Type", yaxis_title="Number Of Listings",xaxis_tickangle=-45)
+    #fig.update_traces(textfont_size=12, textangle=0, textposition="outside")
+  
+  st.plotly_chart(fig3, use_container_width= True)
+
+
+
+  st.markdown("Select Neighbourhood to find who gets **:red[More Reviews]** from guests: Superhosts Or Non-SuperHosts? .")
+  st.markdown("Does Superhosts gets more reviews compared to Non-Superhosts?")
+  #roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
+  price=df.query(f"""neighbourhood_cleansed==@neighbourhood #and room_type==@roomtype""")
+
+  def superhost(row_value):
+      if "t" in str(row_value).lower():
+        return 'SuperHost'
+      else:
+        return 'Non-SuperHost'
+      
+  price["Host Is Superhost"] =  price['host_is_superhost'].apply(superhost)
+  superdf2=price.groupby(['Host Is Superhost'],as_index=False).agg(Average_Number_of_Reviews=('number_of_reviews',np.mean))                  
+ 
+  fig4 = px.bar(superdf2, title=f"Average Number of Reviews received by Superhosts vs Non-SuperHosts in *{neighbourhood}*",\
+             x="Host Is Superhost",
+              y="Average_Number_of_Reviews", 
+                                    
+              barmode = 'group',
+              text="Average_Number_of_Reviews",        
+              hover_data=['Average_Number_of_Reviews']).update_traces(textposition='outside',cliponaxis=False,texttemplate='%{y:.2f}').update_layout(
+    xaxis_title="Type of Host", yaxis_title="Average Number of Reviews",xaxis_tickangle=-45)
+    #fig.update_traces(textfont_size=12, textangle=0, textposition="outside")
+  
+  st.plotly_chart(fig4, use_container_width= True)
+###################################Insights Page######################################################
+if page == 'Other Important Insights':
   # with st.expander('Interesting Insights on Airbnb Chicago'):
   #   st.write('This app lets the user visualize interesting insights in the Chicago Airbnb Market using Neighbourhood and Review score rating filters')
   rating_var = st.sidebar.slider("Review Scores Rating", float(df.review_scores_rating.min()), float(df.review_scores_rating.max()),(4.5, 5.0))
@@ -181,73 +271,10 @@ if page == 'Insights':
 )
   
   st.plotly_chart(fig, use_container_width= True )
-
-###############################
-  st.markdown("Select Neighbourhood to analyze the differences in Price ($) for Properties listed by Superhosts and Non-SuperHosts.")
-  st.markdown("Are Superhosts charging more compared to Non-Superhosts?")
-  #roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
-  price=df.query(f"""neighbourhood_cleansed==@neighbourhood #and room_type==@roomtype""")
-
-  def superhost(row_value):
-      if "t" in str(row_value).lower():
-        return 'SuperHost'
-      else:
-        return 'Non-SuperHost'
-      
-  price["Host Is Superhost"] =  price['host_is_superhost'].apply(superhost)
-  superdf=price.groupby(['room_type','Host Is Superhost'],as_index=False).agg(AveragePrice=('price',np.mean))                  
-  # superdf=price.groupby(['room_type','HostIsSuperhost'],as_index=False).agg(AveragePrice=('price',np.mean)).\
-  #                        sort_values('AveragePrice', ascending=False, ignore_index= True)
-  #st.table(pricedf)
-  # fig = px.box(
-  #   data_frame = superdf
-  #   ,y = 'AveragePrice'
-  #   ,x = 'room_type'
-  #   ,color = 'Host Is Superhost'
-  #   ,color_discrete_map={"SuperHost":"blue", "Non-SuperHost":"red"}
-  #   ,category_orders={"Host Is Superhost":("SuperHost", "Non-SuperHost")}
-  # )
-  # st.plotly_chart(fig, use_container_width= True )
-
-  fig2 = px.bar(superdf, title=f"Average Price of Properties listed by Superhosts vs Non-SuperHosts in *{neighbourhood}*",\
-             x="room_type",
-              y="AveragePrice",      
-              color="Host Is Superhost", 
-              color_discrete_map={"SuperHost":"blue", "Non-SuperHost":"red"}, 
-              #category_orders={"variable":["Revenue","Expenses"]}, 
-              barmode = 'group',
-              text="AveragePrice",        
-              hover_data=['AveragePrice']).update_traces(textposition='outside',cliponaxis=False, texttemplate='$%{y:.2f}').update_layout(
-    xaxis_title="Property Type", yaxis_title="Average Price ($)",xaxis_tickangle=-45)
-    #fig.update_traces(textfont_size=12, textangle=0, textposition="outside")
-  
-  st.plotly_chart(fig2, use_container_width= True)
-
-  # bars = alt.Chart(pricedf,title=f"Average Price by Room Type in **{neighbourhood}**").mark_bar().encode(
-  #       x= alt.X('room_type:N', title='Room Type', sort = '-y' ),      
-  #       y=alt.Y('AveragePrice:Q', title='Average Price')
-  #       )
-  #st.altair_chart(fig, use_container_width=True)
   
 
-
-  ############"#####
-  # st.markdown("Select Neighbourhood Filter to find the **Top Rated Hosts** in the area")
-
-  # top = df.query(f"""neighbourhood_cleansed==@neighbourhood""")
-  # topdf=top.groupby(['host_name'],as_index=False).agg(NumberOfReviews=('number_of_reviews',np.size))\
-  #     .sort_values('NumberOfReviews',ascending=False,ignore_index=True)
-  # topdf= topdf.head(5)
-  # bars = alt.Chart(topdf,title=f"Top Rated Hosts in **{neighbourhood}**").mark_bar().encode(
-  #       x= alt.Y('NumberOfReviews:Q', title='Number Of Reviews'),      
-  #       y=alt.Y('host_name:N', title='Host',sort = '-x')
-  #       )
-  # st.altair_chart(bars, use_container_width=True)
-
-
-
-###############################PAGE3 LISTINGS BY TOP HOSTS######################################################################
-if page=="Listings By Top Hosts":
+###############################PAGE= LISTINGS BY TOP HOSTS######################################################################
+if page=="Listing Details By Top Hosts":
   st.markdown("This page will help us to get details of the listings by Top Hosts within the selected Price Range and in the neighbourhood of your choice") 
   #st.text("Select Neighbourhood and Price Range to filter the top hosts in the area based on the number of properties listed.")
               
@@ -296,158 +323,3 @@ if page=="Listings By Top Hosts":
 
   # Render the map in Streamlit
   st_data =  st_folium(m, width= 725)
-
-#   ###########################SENTIMENT ANALYSIS #########################################################
-# nltk.download('vader_lexicon')
-
-# if page=="Sentiment Analysis of Reviews":
-  
-#   @st.cache_data
-#   def get_data1():
-#       df_sa = pd.read_csv("data/reviews.csv", encoding='latin-1')
-#       return df_sa
-
-#   #df = pd.read_csv("data/reviewsmarch22.csv")
-#   df_sa=get_data1()
-#   fdf=df_sa.dropna().reset_index(drop=True)
-#   df_1 = fdf[['listing_id','comments']]
-#   #st.write(df_1)
-
-
-#   def data_processing(text):
-#       text = text.lower()
-#       text = re.sub(r"https\S+|www\S+https\S+", '',text, flags=re.MULTILINE)
-#       text = re.sub(r'\@w+|\#','',text)
-#       text = re.sub(r'[^\w\s]','',text)
-#       text_tokens = word_tokenize(text)
-#       filtered_text = [w for w in text_tokens if not w in stop_words]
-#       return " ".join(filtered_text)
-
-#   df_1.comments = df_1.comments.apply(data_processing)
-
-#   stemmer = PorterStemmer()
-#   def stemming(data):
-#       text = [stemmer.stem(word) for word in data]
-#       return data
-
-#   df_1['comments'] = df_1['comments'].apply(lambda x: stemming(x))
-
-#   df_2=df_1
-#   df_2 = df_2[df_2.comments.str.len() > 3]
-
-#   #df_2.head()
-#   #Sentiment Analysis using VADER 
-#   analyzer = SentimentIntensityAnalyzer()
-
-
-#   def sentiment_scores(text):
-#     score = analyzer.polarity_scores(text)
-#     print("{:-<40} {}".format(text, str(score)))
-
-#   df_2['Scores'] = df_2['comments'].apply(sentiment_scores)
-  
-
-#   df_2['Compound_Score'] = df_2['Scores'].apply(lambda score2: score2['compound'])
-  
-#   def sentimentvader (score):
-#     if score >= 0.5:
-#         return 'Positive'
-#     if (score > 0) and (score < 0.5):
-#         return 'Neutral'
-#     if score <= 0:
-#         return 'Negative'
-    
-  
-#   df2['Vader_Sentiment'] = df2['Compound_score'].apply(sentimentvader)
-
-#   #Filter the positive comments
-#   pos_comments = df_2[df_2.Vader_Sentiment == 'Positive']
-#   pos_comments = pos_comments.sort_values(['Compound_score'], ascending= False)
-
-#   #WORD CLOUD OF MOST FREQUENT WORDS IN POSTITIVE REVIEWS
-
-#   comments = ' '.join([word for word in pos_comments['comments']])
-
-#   neg_com = df_2[df_2.Vader_Sentiment == 'Negative']
-#   neg_com = neg_com.sort_values(['Compound_score'], ascending= False)
-  
-
-#   tab1,tab2=st.tabs(['Positive Reviews','Negative Reviews'])
-
-#   with tab1:
-#       #plt.figure(figsize=(20,15), facecolor='None')
-#       wordcloud = WordCloud(max_words=300, width=1400, height=700).generate(comments)
-#       plt.imshow(wordcloud, interpolation='bilinear')
-#       plt.axis("off")
-#       plt.title('Most frequent words in positive reviews', fontsize=15)
-#       st.image(wordcloud.to_array())
-
-#   with tab2:
-#      com1 = ' '.join([word for word in neg_com['comments']])
-     
-#      wordcloud = WordCloud(max_words=300, width=1400, height=700).generate(com1)
-#      plt.imshow(wordcloud, interpolation='bilinear')
-#      plt.axis("off")
-#      plt.title('Most frequent words in negative reviews', fontsize=19)
-#      st.image(wordcloud.to_array())
-
-
-  
-  #Sentiment Analysis using Text Blob 
-
-  # def polarity(text):
-  #     return TextBlob(text).sentiment.polarity
-
-  # df_2['Polarity'] = df_2['comments'].apply(polarity)
-  # def sentiment(label):
-  #     if label <0:
-  #         return "Negative"
-  #     elif label ==0:
-  #         return "Neutral"
-  #     elif label>0:
-  #         return "Positive"
-
-  # df_2['TB_sentiment'] = df_2['Polarity'].apply(sentiment)
-  # #st.write(df_2.head(100))
-  # #Filter the positive comments
-  # pos_comments = df_2[df_2.TB_sentiment == 'Positive']
-  # pos_comments = pos_comments.sort_values(['Polarity'], ascending= False)
-
-  # #WORD CLOUD OF MOST FREQUENT WORDS IN POSTITIVE REVIEWS
-
-  # comments = ' '.join([word for word in pos_comments['comments']])
-
-  # neg_com = df_2[df_2.TB_sentiment == 'Negative']
-  # neg_com = neg_com.sort_values(['Polarity'], ascending= False)
-  
-
-  # tab1,tab2=st.tabs(['Positive Reviews','Negative Reviews'])
-
-  # with tab1:
-  #     #plt.figure(figsize=(20,15), facecolor='None')
-  #     wordcloud = WordCloud(max_words=300, width=1400, height=700).generate(comments)
-  #     plt.imshow(wordcloud, interpolation='bilinear')
-  #     plt.axis("off")
-  #     plt.title('Most frequent words in positive reviews', fontsize=15)
-  #     st.image(wordcloud.to_array())
-
-  # with tab2:
-  #    com1 = ' '.join([word for word in neg_com['comments']])
-     
-  #    wordcloud = WordCloud(max_words=300, width=1400, height=700).generate(com1)
-  #    plt.imshow(wordcloud, interpolation='bilinear')
-  #    plt.axis("off")
-  #    plt.title('Most frequent words in negative reviews', fontsize=19)
-  #    st.image(wordcloud.to_array())
-
-
-
-
-
-    
-    
- 
-   
-
-  
-
