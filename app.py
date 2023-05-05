@@ -24,7 +24,7 @@ def get_data():
 st.title('Airbnb Chicago Insights')
 page = st_btn_select(
   # The different pages
-  ('Interesting Trends','Listing By Top Hosts','SuperHosts vs Non-SuperHosts','Best Neighbourhoods+Listings'),
+  ('Interesting Trends','Listings By Top Hosts','SuperHosts vs Non-SuperHosts','Best Neighbourhoods+Listings'),
   # Enable navbar
   nav=False
 )
@@ -154,7 +154,7 @@ if page=='SuperHosts vs Non-SuperHosts':
 
 
 ################################### Page=Best Neighbourhoods and Most Reliable Listings ######################################################
-if page == 'Best Neighbourhoods+Reliable Listings':
+if page == 'Best Neighbourhoods+Listings':
   # with st.expander('Interesting Insights on Airbnb Chicago'):
   #   st.write('This app lets the user visualize interesting insights in the Chicago Airbnb Market using Neighbourhood and Review score rating filters')
   rating_var = st.sidebar.slider("Review Scores Rating", float(df.review_scores_rating.min()), float(df.review_scores_rating.max()),(4.5, 5.0))
@@ -249,7 +249,7 @@ if page == 'Best Neighbourhoods+Reliable Listings':
   
 
 ###############################PAGE = LISTINGS BY TOP HOSTS######################################################################
-if page=="Listing By Top Hosts":
+if page=="Listings By Top Hosts":
   st.markdown("This page will help us to get details of the listings by Top Hosts within the selected Price Range and in the neighbourhood of your choice") 
   #st.text("Select Neighbourhood and Price Range to filter the top hosts in the area based on the number of properties listed.")
               
