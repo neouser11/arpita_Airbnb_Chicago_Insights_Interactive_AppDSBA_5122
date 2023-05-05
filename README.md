@@ -19,7 +19,7 @@ All guests look for licensed Airbnb properties but there might be some which are
 Every customer in search of an airbnb looks out for properties from hosts whose identity is verified and who responds pro-actively.This page finds the listings from the Most Trustworthy and Proactive Hosts in your preferred neighbourhood and Room Type.
 
 Streamlit app URL:
-
+https://neouser11-arpita-airbnb-chicago-insights-interactive-app-0cqcfx.streamlit.app/
 
 
 Future work: Perform sentiment analysis of the reviews using Vader sentiment analyzer to extract insights and use them as part of predictive modeling. This will give the hosts an idea of the areas where they are performing well as well as areas of improvement.
