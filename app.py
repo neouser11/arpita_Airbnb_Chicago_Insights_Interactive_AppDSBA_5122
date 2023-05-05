@@ -24,7 +24,7 @@ def get_data():
 st.title('Airbnb Chicago Insights')
 page = st_btn_select(
   # The different pages
-  ('Interesting Trends','Listing By Top Hosts','SuperHosts vs Non-SuperHosts','Best Neighbourhoods+Reliable Listings'),
+  ('Interesting Trends','Listing By Top Hosts','SuperHosts vs Non-SuperHosts','Best Neighbourhoods+Listings'),
   # Enable navbar
   nav=False
 )
