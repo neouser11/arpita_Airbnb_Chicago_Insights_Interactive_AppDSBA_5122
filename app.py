@@ -65,7 +65,7 @@ if page=='SuperHosts vs Non-SuperHosts':
   
   neighbourhood = st.sidebar.selectbox('Select neighbourhood',df['neighbourhood_cleansed'].unique())
   image = Image.open('data/superhost.jpg')
-  st.sidebar.image(image, use_column_width=True)
+  #st.sidebar.image(image, use_column_width=True)
   st.markdown("Select Neighbourhood to analyze the **:red[Differences in Price ($)]** for Properties listed by Superhosts and Non-SuperHosts.")
   st.markdown("Are **:blue[Superhosts]** charging more compared to **:red[Non-Superhosts]** across different property types ?")
   #roomtype = st.sidebar.selectbox('Choose preferred Room Type',df['room_type'].unique())
