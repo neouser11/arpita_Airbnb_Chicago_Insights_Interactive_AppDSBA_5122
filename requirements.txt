@@ -1,7 +1,6 @@
 altair==4.2.2
 folium==0.14.0
 matplotlib==3.7.1
-nltk==3.8.1
 numpy==1.21.0
 pages==0.3
 pandas==1.2.5
@@ -11,5 +10,3 @@ squarify==0.4.3
 st_btn_select==0.1.2
 streamlit==1.20.0
 streamlit_folium==0.11.1
-textblob==0.17.1
-wordcloud==1.8.2.2
