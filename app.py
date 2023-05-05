@@ -24,7 +24,7 @@ def get_data():
 st.title('Airbnb Chicago Insights')
 page = st_btn_select(
   # The different pages
-  ('Interesting Trends','Listing Details By Top Hosts','SuperHosts vs Non-SuperHosts','Other Important Insights'),
+  ('Interesting Trends','Listing By Top Hosts','SuperHosts vs Non-SuperHosts','Best Neighbourhoods+Reliable Listings'),
   # Enable navbar
   nav=False
 )
@@ -153,8 +153,8 @@ if page=='SuperHosts vs Non-SuperHosts':
   st.plotly_chart(fig4, use_container_width= True)
 
 
-###################################Insights Page######################################################
-if page == 'Other Important Insights':
+################################### Page=Best Neighbourhoods and Most Reliable Listings ######################################################
+if page == 'Best Neighbourhoods+Reliable Listings':
   # with st.expander('Interesting Insights on Airbnb Chicago'):
   #   st.write('This app lets the user visualize interesting insights in the Chicago Airbnb Market using Neighbourhood and Review score rating filters')
   rating_var = st.sidebar.slider("Review Scores Rating", float(df.review_scores_rating.min()), float(df.review_scores_rating.max()),(4.5, 5.0))
@@ -196,7 +196,7 @@ if page == 'Other Important Insights':
       else:
         return 'Non-SuperHost'
 
-  st.markdown("Do you want to find the distribution of listings that are licensed,unlicensed or exempt across different Room types in your chosen neighbourhood?")
+  st.markdown("Do you want to find the distribution of listings that are Licensed, Unlicensed, Pending or Exempt across different Room types in your chosen neighbourhood?")
   st.markdown("Drill down the chart by Superhost filter on the sidebar.")
   #st.markdown("Select Neighbourhood and SuperHost Filter to find the number of licensed or Unlicensed listings belonging to each Room Type.")
     #dfPrice=df.query(f"""neighbourhood_cleansed==@neighbourhood""")
@@ -226,7 +226,7 @@ if page == 'Other Important Insights':
       else:
         return 'Not Verified'
       
-  st.markdown("Let us analyze the number of Properties from the Most Trustworthy and Proactive Hosts in your preferred neighbourhood and Room Type.")
+  st.markdown("Every customer in search of an airbnb looks out for properties from hosts whose identity is verified and who responds **pro-actively**.Let us analyze the number of Properties from the Most Trustworthy and Proactive Hosts in your preferred neighbourhood and Room Type.")
   roomtype = st.selectbox('Choose your preferred Room Type',df['room_type'].unique())
   dfsecure=df.query(f"""neighbourhood_cleansed==@neighbourhood and room_type==@roomtype""")
   dfsecure["Host Identity Verified"] =  dfsecure['host_identity_verified'].apply(getidentity_ver)
@@ -249,7 +249,7 @@ if page == 'Other Important Insights':
   
 
 ###############################PAGE = LISTINGS BY TOP HOSTS######################################################################
-if page=="Listing Details By Top Hosts":
+if page=="Listing By Top Hosts":
   st.markdown("This page will help us to get details of the listings by Top Hosts within the selected Price Range and in the neighbourhood of your choice") 
   #st.text("Select Neighbourhood and Price Range to filter the top hosts in the area based on the number of properties listed.")
               
