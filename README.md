@@ -1,4 +1,5 @@
-Airbnb Chicago Insights 
+                                    Airbnb Chicago Insights 
+
 This application has been designed to provide useful insights to guests who are looking for an Airbnb in various neighborhoods of Chicago as well as for New hosts who want to Airbnb their properties and get the most benefit out of their investment.
  
 Real time data is collected from http://insideairbnb.com/get-the-data 
